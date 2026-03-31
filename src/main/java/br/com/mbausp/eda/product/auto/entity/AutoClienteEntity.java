@@ -47,7 +47,7 @@ public class AutoClienteEntity {
 	}
 
 	public String getClienteId() {
-		return this.clienteId;
+		return this.clienteId.trim();
 	}
 
 	public void setClienteId(String clienteId) {
