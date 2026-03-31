@@ -140,6 +140,7 @@ services:
       - app1
       - app2
 
+# dashs para importar 22108, 20727 e 21308
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
