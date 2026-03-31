@@ -12,7 +12,7 @@ CREATE SCHEMA IF NOT EXISTS auto AUTHORIZATION userauto;
 CREATE TABLE IF NOT EXISTS auto.auto_cliente
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    cliente_id character(1) COLLATE pg_catalog."default" NOT NULL,
+    cliente_id character(15) COLLATE pg_catalog."default" NOT NULL,
     nu_contrato integer NOT NULL,
 	contrato_seq smallint NOT NULL,
     auto_ativo boolean NOT NULL,
