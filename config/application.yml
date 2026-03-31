@@ -1,0 +1,59 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh,health,info,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+runtime:
+  props:
+    unavailable: false
+    min-latency-in-milli: 10
+    max-latency-in-milli: 5000
+
+server:
+  port: 8080
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: service-auto
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/db_auto #banco especifico
+    username: admin
+    password: admin123
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+camel:
+  routes:
+    direct: 
+      consultar-auto: direct:consultar-auto
+      criar-auto: direct:criar-auto
+    kafka:
+      notificar-auto: kafka:notificar-conta?brokers={{camel.component.kafka.brokers}}
+
+  component:
+    kafka:
+      autoCreateTopics: true
+      brokers: broker:9093 # nome do serviço
+      group-id: service-auto
+      auto-offset-reset: earliest
+
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  dataformat:
+    jackson:
+      auto-discover-object-mapper: true

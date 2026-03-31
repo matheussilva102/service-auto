@@ -1,0 +1,163 @@
+services:
+  app1:
+    image: amazoncorretto:21
+    container_name: app1
+    volumes:
+      - ./app.jar:/app.jar
+      - ./config:/config
+    command: java -jar /app.jar --server.port=8080 --spring.config.location=file:/config/
+    expose:
+      - "8080"
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+      - broker
+    restart: unless-stopped
+
+  app2:
+    image: amazoncorretto:21
+    container_name: app2
+    volumes:
+      - ./app.jar:/app.jar
+      - ./config:/config
+    command: java -jar /app.jar --server.port=8080 --spring.config.location=file:/config/
+    expose:
+      - "8080"
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+      - broker
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx-lb
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app1
+      - app2
+    networks:
+      - app-network
+    restart: unless-stopped
+      
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1
+    container_name: zookeeper
+    networks:
+      - app-network
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: broker
+    networks:
+      - app-network
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+      # CORREÇÃO AQUI (sem vírgula no final)
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://0.0.0.0:29092,PLAINTEXT_C://0.0.0.0:9093,PLAINTEXT_L://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://broker:29092,PLAINTEXT_L://localhost:9092,PLAINTEXT_C://broker:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_L:PLAINTEXT,PLAINTEXT_C:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    networks:
+      - app-network
+    depends_on: 
+      - broker
+    ports:
+      - "7777:8080"
+    restart: unless-stopped
+    environment:
+      KAFKA_CLUSTERS_0_NAME: broker
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:9093
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks:
+      - app-network
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+    depends_on:
+      - app1
+      - app2
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    networks:
+      - app-network
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+networks:
+  app-network:
+    driver: bridge
+    
+volumes:
+  postgres_data:
+  pgadmin_data:
+  grafana_data:
