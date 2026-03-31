@@ -15,13 +15,13 @@ public class HttpRest extends RouteBuilder {
         restConfiguration()
             .component("platform-http")
             .bindingMode(RestBindingMode.json)
-            .contextPath("/api")
+            .contextPath("/autos")
             .apiContextPath("/api-doc")
-            .apiProperty("api.title", "CONta API")
+            .apiProperty("api.title", "Auto API")
             .apiProperty("api.version", "1.0.0");
 
-        rest("/auto")
-	        .description("auto de clientes")
+        rest()
+	        .description("auto de cliente")
 	        .get("/{id}")
 	            .to(RouteEnum.DIRECT_CONSULTAR_AUTO.getRoute())
 	        .post("/")

@@ -132,11 +132,11 @@
 			                        <version>${project.version}</version>
 			                        <type>jar</type>
 			                        <!-- Define new name here -->
-			                        <destFileName>app.jar</destFileName>
+			                        <destFileName>app-service-auto.jar</destFileName>
 			                    </artifactItem>
 			                </artifactItems>
 			                <!-- Define output directory here -->
-			                <outputDirectory>/home/matheus/repository/mba/service-auto</outputDirectory>
+			                <outputDirectory>/home/matheus/repository/mba</outputDirectory>
 			            </configuration>
 			        </execution>
 			    </executions>
